@@ -18,6 +18,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username', 'password', 'phone')
 
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("Username is already taken.")
+        return value
+
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
         return user

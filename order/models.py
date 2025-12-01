@@ -29,7 +29,7 @@ class Order(models.Model):
 
     @property
     def overall_price(self):
-        total = sum(item.total_price for item in self.items.all())
+        total = sum(item.total_price for item in self.items.all()), Decimal('0.00')
         return round(float(total), 2)
 
     def __str__(self):
@@ -43,7 +43,7 @@ class OrderItem(models.Model):
         related_name='items'
     )
     product = models.ForeignKey(
-        'product.Product',  # optional: use string if Product is in another app
+        'product.Product',
         on_delete=models.SET_NULL,
         null=True
     )

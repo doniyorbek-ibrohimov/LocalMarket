@@ -1,3 +1,5 @@
+from django.core.exceptions import ValidationError
+from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models import Avg
@@ -26,7 +28,7 @@ class Product(models.Model):
     price = models.FloatField(validators=[MinValueValidator(0.0)])
     amount = models.PositiveSmallIntegerField()
     rating = models.FloatField(
-        validators=[MinValueValidator(0.0), MaxValueValidator(5.0)]
+        validators=[MinValueValidator(0.0), MaxValueValidator(5.0),], default=0.0
     )
     is_available = models.BooleanField(default=True)
     category = models.ForeignKey('Category', on_delete=models.CASCADE, related_name='products')
@@ -36,6 +38,27 @@ class Product(models.Model):
         avg = self.reviews.aggregate(Avg('rating'))['rating__avg'] or 0
         self.rating = round(avg, 1)
         self.save(update_fields=["rating"])
+
+
+    def get_active_discount(self):
+        """Return the active discount object if any, otherwise None."""
+        now = timezone.now()
+        return (
+            self.discounts.filter(
+                active=True,
+                start_date__lte=now,
+                end_date__gte=now
+            ).order_by('-percentage').first()
+        )
+
+    @property
+    def discounted_price(self):
+        """Return price with applied discount, if active."""
+        discount = self.get_active_discount()
+        if discount:
+            discounted_value = self.price * (1 - discount.percentage / 100)
+            return round(discounted_value, 2)
+        return self.price
 
 
     def __str__(self):
@@ -52,6 +75,20 @@ class Discount(models.Model):
     end_date = models.DateTimeField()
     active = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def clean(self):
+        super().clean()
+        if self.end_date <= self.start_date:
+            raise ValidationError("End date must be after Start date!")
+        overlapping = Discount.objects.filter(
+            product = self.product,
+            active = True,
+            start_date__lte = self.end_date,
+            end_date__gte = self.start_date,
+        ).exclude(pk=self.pk)
+
+        if overlapping.exists():
+            raise ValidationError("Another active discount overlaps for this product")
 
     def __str__(self):
         return f"{self.title} - {self.percentage}%"
@@ -90,6 +127,7 @@ class Cart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cart')
     created_at = models.DateTimeField(auto_now_add=True)
 
+    @property
     def total(self):
         return sum(item.total_price() for item in self.items.all())
 
@@ -101,6 +139,6 @@ class CartItem(models.Model):
 
     @property
     def total_price(self):
-        return self.product.price * self.quantity
+        return self.product.discounted_price * self.quantity
 
 
