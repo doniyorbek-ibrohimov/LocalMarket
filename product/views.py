@@ -94,6 +94,11 @@ class CartItemAddAPIView(generics.CreateAPIView):
         context['cart'] = cart
         return context
 
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return CartItem.objects.none()
+        return CartItem.objects.filter(cart__user=self.request.user)
+
 
 class CartItemUpdateAPIView(generics.UpdateAPIView):
     queryset = CartItem.objects.all()
@@ -103,12 +108,22 @@ class CartItemUpdateAPIView(generics.UpdateAPIView):
     def get_queryset(self):
         return CartItem.objects.filter(cart__user=self.request.user)
 
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return CartItem.objects.none()
+        return CartItem.objects.filter(cart__user=self.request.user)
+
 
 class CartItemDeleteAPIView(generics.DestroyAPIView):
     queryset = CartItem.objects.all()
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        return CartItem.objects.filter(cart__user=self.request.user)
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return CartItem.objects.none()
         return CartItem.objects.filter(cart__user=self.request.user)
 
 

@@ -1,5 +1,3 @@
-from tkinter.font import names
-
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 from .views import (BannerViewSet ,CategoryViewSet,
@@ -10,7 +8,7 @@ from .views import (BannerViewSet ,CategoryViewSet,
                     )
 
 router = DefaultRouter()
-router.register(r'banners', CategoryViewSet, basename='banner')
+router.register(r'banners', BannerViewSet, basename='banner')
 router.register(r'categories', CategoryViewSet, basename='category')
 router.register(r'products', ProductViewSet, basename='product')
 router.register(r'discounts', DiscountViewSet, basename='discount')
