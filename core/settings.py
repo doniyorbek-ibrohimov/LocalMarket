@@ -33,6 +33,7 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
+    'unfold',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -173,3 +174,10 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.User'
+
+UNFOLD = {
+    "SITE_HEADER": "LocalMarket Admin",
+    "SITE_TITLE": "LocalMarket",
+    "WELCOME_SIGN": "Welcome to LocalMarket admin",
+    "COPYRIGHT": "LocalMarket © 2025",
+}

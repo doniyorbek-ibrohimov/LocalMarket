@@ -90,6 +90,13 @@ class CartItemAddAPIView(generics.CreateAPIView):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
+
+        if getattr(self, 'swagger_fake_view', False):
+            return context
+
+        if not self.request.user.is_authenticated:
+            return context
+
         cart, _ = Cart.objects.get_or_create(user=self.request.user)
         context['cart'] = cart
         return context
